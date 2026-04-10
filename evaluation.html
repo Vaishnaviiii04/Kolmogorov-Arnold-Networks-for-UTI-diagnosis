@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Model Evaluation</title>
+  <link rel="stylesheet" href="static/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="nav">
+    <a href="index.html">Home</a>
+    <a href="evaluation.html" class="active">Evaluation</a>
+    <a href="about.html">About / Results</a>
+  </div>
+</header>
+
+<main class="dashboard">
+
+  <h2>Model Evaluation</h2>
+
+  <!-- Upload Panel -->
+  <div class="panel">
+    <h4>Upload Images</h4>
+    <input type="file" id="images" multiple accept="image/*">
+    <br><br>
+    <button onclick="runEvaluation()">Analyze Dataset</button>
+  </div>
+
+  <!-- Accuracy Cards -->
+  <div class="stats-row">
+    <div class="stat-box blue">
+      <h3 id="kanAcc">--%</h3>
+      <span>KAN-C-MLP Accuracy</span>
+    </div>
+    <div class="stat-box orange">
+      <h3 id="gnetAcc">--%</h3>
+      <span>GoogLeNet Accuracy</span>
+    </div>
+  </div>
+
+  <!-- Class Distribution Card -->
+  <div class="panel">
+    <h4>Class Distribution (%)</h4>
+    <table>
+      <tr>
+        <th>Model</th>
+        <th>Negative</th>
+        <th>Positive</th>
+        <th>Uncertain</th>
+      </tr>
+      <tr>
+        <td>KAN-C-MLP</td>
+        <td id="kanNeg">--%</td>
+        <td id="kanPos">--%</td>
+        <td id="kanUnc">--%</td>
+      </tr>
+      <tr>
+        <td>GoogLeNet</td>
+        <td id="gNeg">--%</td>
+        <td id="gPos">--%</td>
+        <td id="gUnc">--%</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content-grid">
+
+    <!-- Confusion Matrix -->
+    <div class="panel">
+      <h4>Confusion Matrix</h4>
+      <table>
+        <tr>
+          <th>Model</th>
+          <th>TP</th>
+          <th>TN</th>
+          <th>FP</th>
+          <th>FN</th>
+        </tr>
+        <tr>
+          <td>KAN-C-MLP</td>
+          <td id="kanTP">-</td>
+          <td id="kanTN">-</td>
+          <td id="kanFP">-</td>
+          <td id="kanFN">-</td>
+        </tr>
+        <tr>
+          <td>GoogLeNet</td>
+          <td id="gTP">-</td>
+          <td id="gTN">-</td>
+          <td id="gFP">-</td>
+          <td id="gFN">-</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Predictions -->
+    <div class="panel">
+      <h4>Predictions</h4>
+      <ul id="results">
+        <li>No results yet</li>
+      </ul>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+async function runEvaluation() {
+  const files = document.getElementById("images").files;
+  if (files.length === 0) {
+    alert("Please upload images first");
+    return;
+  }
+
+  const formData = new FormData();
+  for (let f of files) {
+    formData.append("images", f);
+  }
+
+  try {
+    const response = await fetch("/evaluate", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    /* -------------------------
+       Predictions
+    ------------------------- */
+    const list = document.getElementById("results");
+    list.innerHTML = "";
+
+    data.predictions.forEach(item => {
+      const li = document.createElement("li");
+      li.innerText = `${item.image} → KAN: ${item.kan}, GoogLeNet: ${item.googlenet}`;
+      list.appendChild(li);
+    });
+
+    /* -------------------------
+       Class Distribution
+    ------------------------- */
+    const dist = data.class_distribution;
+
+    document.getElementById("kanNeg").innerText = dist.kan.Negative + "%";
+    document.getElementById("kanPos").innerText = dist.kan.Positive + "%";
+    document.getElementById("kanUnc").innerText = dist.kan.Uncertain + "%";
+
+    document.getElementById("gNeg").innerText = dist.googlenet.Negative + "%";
+    document.getElementById("gPos").innerText = dist.googlenet.Positive + "%";
+    document.getElementById("gUnc").innerText = dist.googlenet.Uncertain + "%";
+
+    /* -------------------------
+       Stored Metrics (STATIC)
+    ------------------------- */
+    const kan = data.metrics.kan;
+    const gnet = data.metrics.googlenet;
+
+    // Accuracy cards
+    document.getElementById("kanAcc").innerText = (kan.accuracy * 100).toFixed(2) + "%";
+    document.getElementById("gnetAcc").innerText = (gnet.accuracy * 100).toFixed(2) + "%";
+
+    // Confusion matrix — KAN
+    document.getElementById("kanTP").innerText = kan.confusion_matrix.TP;
+    document.getElementById("kanTN").innerText = kan.confusion_matrix.TN;
+    document.getElementById("kanFP").innerText = kan.confusion_matrix.FP;
+    document.getElementById("kanFN").innerText = kan.confusion_matrix.FN;
+
+    // Confusion matrix — GoogLeNet
+    document.getElementById("gTP").innerText = gnet.confusion_matrix.TP;
+    document.getElementById("gTN").innerText = gnet.confusion_matrix.TN;
+    document.getElementById("gFP").innerText = gnet.confusion_matrix.FP;
+    document.getElementById("gFN").innerText = gnet.confusion_matrix.FN;
+
+  } catch (err) {
+    alert("Failed to connect to backend. Is Flask running?");
+    console.error(err);
+  }
+}
+</script>
+
+</body>
+</html>
