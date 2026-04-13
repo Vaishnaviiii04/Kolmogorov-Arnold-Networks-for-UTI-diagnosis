@@ -4,6 +4,9 @@ Urine culture is a critical diagnostic methodology for identifying bacterial inf
 
 Urine samples corresponding to cultures with urinary tract infection (UTI) susceptibility exhibit certain patterns that can be effectively recognized by deep learning techniques. This research proposes employing deep learning techniques to identify bacterial infections in urine cultures.
 
+Data Availability Statement: The dataset of interest in this article can be accessed from the article,
+https://www.sciencedirect.com/science/article/pii/S235234092300152X.
+
 Traditionally, multi-layered perceptrons (`MLP`) have contributed to the architecture of numerous deep-learning models, such as Convolutional Neural Networks (CNNs) and Transformers, which are known to complement labor-intensive tasks with high accuracy. Recently, a new architecture for deep-learning models, based on the **Kolmogorov–Arnold Representation Theorem**, has been proposed. Models adopting the **Kolmogorov Arnold Network** (`KAN`) architecture have demonstrated better results in many instances compared to those based on classical `MLP` architectures.
 
 Experiments conducted in this research used a dataset of 1,500 urine culture images contributed by da Silva *et al.*, annotated into three categories: **positive**, **negative**, and **uncertain** UTI susceptibility. The results showed that models incorporating the `KAN` architecture achieved superior accuracy compared to their `MLP`-based counterparts. For instance:
